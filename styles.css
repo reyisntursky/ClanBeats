@@ -1,0 +1,521 @@
+/* ─── Reset & Base ─────────────────────────────────────────────────────── */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --bg-gradient:   #000000;
+    --accent-rose:   #cb5a72;
+    --accent-light:  #e88c9e;
+    --card-bg-light: #cfc7c9;
+    --track-text:    #2e121a;
+    --text-white:    #ffffff;
+}
+
+/* ─── Synthwave Visualizer Canvas ───────────────────────────────────────── */
+#synthwave-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+    pointer-events: none;
+}
+
+body {
+    font-family: 'Outfit', sans-serif;
+    background: #000000;
+    color: var(--text-white);
+    min-height: 100vh;
+    padding: 40px 60px 60px;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* ─── Base Site Brand Header ─────────────────────────────────────────────── */
+.brand-header, .app-label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text-white);
+    letter-spacing: 0.5px;
+    margin-bottom: 24px;
+    animation: floatGentleC 8s ease-in-out infinite;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 0 20px rgba(203, 90, 114, 0.4);
+}
+
+/* ─── Base Site Main Layout (Floating Windows on Page) ────────────────────── */
+.player-page-container, .app-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 50px;
+    max-width: 960px;
+    margin: 0 auto;
+    width: 100%;
+    flex: 1;
+    position: relative;
+    z-index: 1;
+}
+
+.col-section, .left-col, .right-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+}
+
+.section-title, .col-header {
+    font-family: 'Outfit', sans-serif;
+    font-size: 24px;
+    font-weight: 400;
+    color: var(--text-white);
+    margin-bottom: 24px;
+    text-align: center;
+    letter-spacing: 0.3px;
+}
+
+/* ─── Floating Album Art Card ────────────────────────────────────────────── */
+.album-art-card, .album-art-wrap {
+    width: 320px;
+    height: 320px;
+    max-width: 320px;
+    max-height: 320px;
+    background: #e8e2e4;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 14px 40px rgba(0,0,0,0.45);
+    margin-bottom: 24px;
+    position: relative;
+    flex-shrink: 0;
+    animation: floatGentleA 6s ease-in-out infinite;
+}
+
+.album-art-card img, .album-art-wrap img, #album-art-img {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: cover !important;
+    display: block !important;
+}
+
+.art-placeholder {
+    display: none;
+    position: absolute;
+    inset: 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: #7a505b;
+    font-size: 14px;
+}
+
+.current-track-name {
+    display: none;
+}
+
+/* ─── Floating Metallic Controls Capsule ─────────────────────────────────── */
+.controls-capsule, #main-capsule {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(
+        180deg,
+        #787878 0%,
+        #525252 20%,
+        #363636 50%,
+        #242424 80%,
+        #404040 100%
+    );
+    border-radius: 60px;
+    padding: 8px 22px;
+    width: 220px;
+    height: 68px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255,255,255,0.15);
+    box-shadow:
+        0 10px 28px rgba(0,0,0,0.65),
+        inset 0 1px 0 rgba(255,255,255,0.25),
+        inset 0 -1px 0 rgba(0,0,0,0.6);
+    gap: 8px;
+    animation: floatGentleB 6.8s ease-in-out infinite;
+    animation-delay: 0.7s;
+    position: relative;
+    z-index: 10;
+}
+
+.btn-skip-arrow {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 6px;
+    border-radius: 4px;
+    transition: opacity 0.15s, transform 0.1s;
+    flex-shrink: 0;
+}
+
+.btn-skip-arrow:hover  { opacity: 0.75; }
+.btn-skip-arrow:active { transform: scale(0.86); }
+
+.skip-bar {
+    width: 3.5px;
+    height: 15px;
+    background: linear-gradient(180deg, #e56b82 0%, #9e233b 100%);
+    border-radius: 2px;
+    box-shadow: 0 0 4px rgba(203,90,114,0.5);
+}
+
+.skip-triangle {
+    width: 0;
+    height: 0;
+    border-top: 7.5px solid transparent;
+    border-bottom: 7.5px solid transparent;
+    filter: drop-shadow(0 0 3px rgba(203,90,114,0.5));
+}
+
+.skip-triangle.left  { border-right: 12px solid #cb5a72; }
+.skip-triangle.right { border-left:  12px solid #cb5a72; }
+
+/* ─── Metal Play Button ─────────────────────────────────────────────────── */
+.btn-play-metal {
+    position: relative;
+    z-index: 15;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: radial-gradient(
+        circle at 34% 28%,
+        #e8e8e8 0%,
+        #c8c8c8 18%,
+        #989898 38%,
+        #686868 62%,
+        #3e3e3e 82%,
+        #282828 100%
+    );
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+        0 6px 20px rgba(0,0,0,0.75),
+        0 0 0 2.5px #111,
+        0 0 0 4.5px #666,
+        0 0 0 5.5px #1a1a1a,
+        inset 0 1.5px 3px rgba(255,255,255,0.4),
+        inset 0 -2px 5px rgba(0,0,0,0.65);
+    transition: box-shadow 0.15s, transform 0.1s;
+    flex-shrink: 0;
+}
+
+.btn-play-metal:hover {
+    box-shadow:
+        0 8px 26px rgba(0,0,0,0.85),
+        0 0 0 2.5px #111,
+        0 0 0 4.5px #888,
+        0 0 0 5.5px #222,
+        inset 0 1.5px 3px rgba(255,255,255,0.4),
+        inset 0 -2px 5px rgba(0,0,0,0.65);
+}
+
+.btn-play-metal:active { transform: scale(0.92); }
+
+/* Spin ring */
+.btn-play-metal::before {
+    content: '';
+    position: absolute;
+    inset: -9px;
+    border-radius: 50%;
+    background: conic-gradient(
+        from 0deg,
+        transparent 0%,
+        rgba(203,90,114,0.85) 15%,
+        transparent 28%,
+        rgba(203,90,114,0.45) 50%,
+        transparent 62%,
+        rgba(203,90,114,0.85) 78%,
+        transparent 100%
+    );
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.btn-play-metal.playing {
+    animation: spinButton 4s linear infinite;
+}
+
+.btn-play-metal.playing::before {
+    opacity: 1;
+    animation: spinRing 2s linear infinite;
+}
+
+/* Play Icon Wrapper */
+.play-icon-wrap {
+    position: relative;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    width: 24px;
+    height: 24px;
+}
+
+.btn-play-metal.playing .play-icon-wrap {
+    animation: counterSpin 4s linear infinite;
+}
+
+.icon-play {
+    position: relative;
+    z-index: 101;
+    width: 0;
+    height: 0;
+    border-top: 9.5px solid transparent;
+    border-bottom: 9.5px solid transparent;
+    border-left: 16px solid #cb5a72;
+    margin-left: 4px;
+    filter: drop-shadow(0 0 4px rgba(203,90,114,0.7));
+}
+
+.icon-pause {
+    position: relative;
+    z-index: 101;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.pause-bar {
+    width: 4.5px;
+    height: 19px;
+    background: linear-gradient(180deg, #e56b82 0%, #9e233b 100%);
+    border-radius: 2px;
+    box-shadow: 0 0 5px rgba(203,90,114,0.5);
+}
+
+/* ─── Action Buttons Wrapper ─────────────────────────────────────────────── */
+.action-buttons-wrap {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-action, .btn-download {
+    background: #dddddd;
+    color: #3e2231;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 24px;
+    font-size: 14px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+    transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+    animation: floatGentleC 5.5s ease-in-out infinite;
+    animation-delay: 1.4s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-action:hover, .btn-download:hover {
+    background: #ececec;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+}
+
+.btn-action:active, .btn-download:active {
+    transform: scale(0.94);
+}
+
+/* ─── Floating Track List Window Card (Clipped Scrollbar) ───────────────── */
+.tracks-card {
+    position: relative;
+    width: 380px;
+    height: 460px;
+    max-width: 380px;
+    background: #cfc7c9;
+    border-radius: 24px;
+    padding: 18px 12px 18px 16px;
+    overflow-y: auto;
+    box-shadow: 0 14px 40px rgba(0,0,0,0.45);
+    clip-path: inset(0 round 24px);
+
+    animation: floatGentleB 7.2s ease-in-out infinite;
+    animation-delay: 0.3s;
+}
+
+/* Custom scrollbar clipped neatly within the window */
+.tracks-card::-webkit-scrollbar {
+    width: 8px;
+}
+
+.tracks-card::-webkit-scrollbar-track {
+    background: transparent;
+    margin-top: 14px;
+    margin-bottom: 14px;
+}
+
+.tracks-card::-webkit-scrollbar-thumb {
+    background-color: var(--accent-rose);
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+.tracks-card::-webkit-scrollbar-thumb:hover {
+    background-color: #b0445a;
+}
+
+.track-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.track-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    font-size: 15px;
+    font-family: 'Syne Mono', monospace;
+    font-weight: 400;
+    color: var(--track-text);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.15s;
+    user-select: none;
+}
+
+.track-item:hover:not(.active) {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.track-item.active {
+    background: var(--accent-rose);
+    color: #ffffff;
+}
+
+.track-name-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 230px;
+}
+
+.track-time {
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    color: rgba(46, 18, 26, 0.7);
+    flex-shrink: 0;
+    margin-left: 10px;
+}
+
+.track-item.active .track-time {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* ─── Progress Bar ───────────────────────────────────────────────────────── */
+.progress-wrap {
+    width: 380px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+    padding: 0 4px;
+    animation: floatGentleC 7.2s ease-in-out infinite;
+    animation-delay: 0.3s;
+}
+
+.progress-time {
+    font-size: 12px;
+    font-family: 'Outfit', sans-serif;
+    font-variant-numeric: tabular-nums;
+    color: rgba(255, 255, 255, 0.75);
+    flex-shrink: 0;
+    min-width: 38px;
+}
+
+.progress-time.end { text-align: right; }
+
+.progress-bar-bg {
+    flex: 1;
+    height: 4px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 10px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent-rose);
+    border-radius: 10px;
+    transition: width 0.5s linear;
+    pointer-events: none;
+}
+
+/* ─── Keyframe Animations ────────────────────────────────────────────────── */
+@keyframes floatGentleA {
+    0%   { transform: translateY(0px) rotate(0deg); }
+    50%  { transform: translateY(-8px) rotate(0.4deg); }
+    100% { transform: translateY(0px) rotate(0deg); }
+}
+
+@keyframes floatGentleB {
+    0%   { transform: translateY(0px) rotate(0deg); }
+    50%  { transform: translateY(-10px) rotate(-0.5deg); }
+    100% { transform: translateY(0px) rotate(0deg); }
+}
+
+@keyframes floatGentleC {
+    0%   { transform: translateY(0px); }
+    50%  { transform: translateY(-6px); }
+    100% { transform: translateY(0px); }
+}
+
+@keyframes spinButton {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+@keyframes spinRing {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+@keyframes counterSpin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(-360deg); }
+}
+
+@keyframes iconPop {
+    0%   { transform: scale(0.4); opacity: 0; }
+    100% { transform: scale(1.0); opacity: 1; }
+}
+
+.play-icon-wrap > * {
+    animation: iconPop 0.18s ease-out forwards;
+}
+
+audio { display: none; }

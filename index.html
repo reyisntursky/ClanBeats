@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClanBeats</title>
+    <meta name="description"
+        content="ClanBeats music player — stream and download exclusive beats from the ClanB library.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Syne+Mono&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <!-- Synthwave Visualizer Canvas -->
+    <canvas id="synthwave-canvas"></canvas>
+
+    <!-- Base Website Brand Header -->
+    <h1 class="brand-header">ClanBeats</h1>
+
+    <!-- Floating Window Player Layout -->
+    <main class="player-page-container">
+
+        <!-- Left Column Section -->
+        <section class="col-section">
+            <h2 class="section-title" id="display-track-title">Current Track Name</h2>
+
+            <!-- Floating Album Art Card -->
+            <div class="album-art-card">
+                <img id="album-art-img" src="Album_Cover.png" alt="ClanBeats Album Cover"
+                    onerror="this.style.display='none'; document.querySelector('.art-placeholder').style.display='flex'">
+                <div class="art-placeholder">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="rgba(122,80,91,0.5)">
+                        <path d="M9 3v10.55A4 4 0 1 0 11 17V7h4V3H9z" />
+                    </svg>
+                    <span>Album_Cover.png</span>
+                </div>
+            </div>
+
+            <!-- Floating Controls Capsule -->
+            <div class="controls-capsule" id="main-capsule">
+                <button class="btn-skip-arrow" id="btn-prev" aria-label="Previous track">
+                    <div class="skip-bar"></div>
+                    <div class="skip-triangle left"></div>
+                </button>
+
+                <button class="btn-play-metal" id="btn-play" aria-label="Play or pause">
+                    <div class="play-icon-wrap" id="play-icon-wrap">
+                        <div class="icon-play" id="icon-play"></div>
+                    </div>
+                </button>
+
+                <button class="btn-skip-arrow" id="btn-next" aria-label="Next track">
+                    <div class="skip-triangle right"></div>
+                    <div class="skip-bar"></div>
+                </button>
+            </div>
+
+            <!-- Floating Download Button -->
+            <button class="btn-download" id="btn-download" aria-label="Download current track">Download</button>
+        </section>
+
+        <!-- Right Column Section -->
+        <section class="col-section">
+            <h2 class="section-title">Track List</h2>
+
+            <!-- Floating Track List Window Card -->
+            <div class="tracks-card" id="tracks-card">
+                <ul class="track-list" id="track-list"></ul>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-wrap">
+                <span class="progress-time" id="time-current">00:00</span>
+                <div class="progress-bar-bg" id="progress-bg" role="slider" aria-label="Seek">
+                    <div class="progress-bar-fill" id="progress-fill"></div>
+                </div>
+                <span class="progress-time end" id="time-total">00:00</span>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Core Audio Engine -->
+    <audio id="audio-engine" preload="auto"></audio>
+
+    <script>
+        // ─────────────────────────────────────────────────────────────────────────
+        // DATABASE / REST API INTEGRATION LAYER
+        // When your online database backend is deployed, point this function to
+        // your server endpoint (e.g. GET https://api.yourdomain.com/v1/tracks)
+        // ─────────────────────────────────────────────────────────────────────────
+        async function fetchTrackLibraryFromDatabase() {
+            /*
+            const response = await fetch('https://api.yourdomain.com/v1/tracks');
+            const data = await response.json();
+            return data.map((item, index) => ({
+                name: `${index + 1}.${item.title}`,
+                url: item.audio_url,
+                downloadUrl: item.download_url
+            }));
+            */
+            return null; // Null uses local tracks folder below
+        }
+
+        // ─────────────────────────────────────────────────────────────────────────
+        // LOCAL TRACKS FOLDER CONFIGURATION
+        // Self-contained: tracks are in the /tracks/ subfolder alongside index.html
+        // ─────────────────────────────────────────────────────────────────────────
+        const TRACKS_FOLDER = "tracks/";
+
+        const TRACK_FILES = [
+            "Boilandtrouble - 93.wav",
+            "Damien - 93.wav",
+            "Jehova is waiting for me - 93.wav",
+            "change you rmind - 93.wav",
+            "deep sweet dreams - 93.wav",
+            "falling and fading - 93.wav",
+            "hammer and tongs - 93.wav",
+            "i'm still in love with you - 93.wav",
+            "indian awakening - 93.wav",
+            "like you say you do - 93 - 1.wav",
+            "loafers - 93.wav",
+            "ouzi lovin - 96.wav"
+        ];
+
+        // Clean raw file names into polished track titles
+        function cleanTrackName(filename, index) {
+            let name = filename.replace(/\s*-\s*\d+.*\.wav$/i, ''); // Strip " - 93.wav" / " - 96.wav"
+            name = name.replace(/\.wav$/i, '');
+            name = name.replace(/_/g, ' ').trim();
+            if (name.length > 0) {
+                name = name.charAt(0).toUpperCase() + name.slice(1);
+            }
+            return `${index + 1}.${name}`;
+        }
+
+        let TRACKS = TRACK_FILES.map((filename, i) => {
+            const relUrl = TRACKS_FOLDER + encodeURIComponent(filename);
+            return {
+                name: cleanTrackName(filename, i),
+                url: relUrl,
+                downloadUrl: relUrl,
+                filename: filename,
+                durationStr: '00:00'
+            };
+        });
+
+        // ─── State ───────────────────────────────────────────────────────
+        let currentIndex = 0;
+        let isPlaying = false;
+        let simTimer = null;
+        let simCurrent = 0;
+        const simDuration = 180; // Default fallback duration before metadata loads
+
+        // ─── DOM Refs ─────────────────────────────────────────────────────
+        const audio = document.getElementById('audio-engine');
+        const trackList = document.getElementById('track-list');
+        const btnPlay = document.getElementById('btn-play');
+        const btnPrev = document.getElementById('btn-prev');
+        const btnNext = document.getElementById('btn-next');
+        const btnDownload = document.getElementById('btn-download');
+        const timeCurrent = document.getElementById('time-current');
+        const timeTotal = document.getElementById('time-total');
+        const progressFill = document.getElementById('progress-fill');
+        const progressBg = document.getElementById('progress-bg');
+        const displayTrackTitle = document.getElementById('display-track-title');
+
+        // ─── Utilities ────────────────────────────────────────────────────
+        function fmt(s) {
+            if (!isFinite(s) || isNaN(s)) return '00:00';
+            return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+        }
+
+        // ─── Build Track List UI ──────────────────────────────────────────
+        function buildTrackList() {
+            trackList.innerHTML = '';
+            TRACKS.forEach((track, i) => {
+                const li = document.createElement('li');
+                li.className = 'track-item' + (i === 0 ? ' active' : '');
+                li.id = `track-item-${i}`;
+                li.innerHTML = `
+                    <span class="track-name-text">${track.name}</span>
+                    <span class="track-time" id="track-time-${i}">${track.durationStr || '00:00'}</span>
+                `;
+                li.addEventListener('click', () => {
+                    loadTrack(i);
+                    play();
+                });
+                trackList.appendChild(li);
+            });
+        }
+
+        // ─── Probe Track Durations Asynchronously ─────────────────────────
+        function probeAudioDurations() {
+            TRACKS.forEach((track, i) => {
+                const tempAudio = new Audio();
+                tempAudio.src = track.url;
+                tempAudio.addEventListener('loadedmetadata', () => {
+                    track.durationStr = fmt(tempAudio.duration);
+                    const timeEl = document.getElementById(`track-time-${i}`);
+                    if (timeEl) timeEl.textContent = track.durationStr;
+                    if (i === currentIndex && audio.duration) {
+                        timeTotal.textContent = fmt(audio.duration);
+                    }
+                });
+            });
+        }
+
+        // ─── Load Track ───────────────────────────────────────────────────
+        function loadTrack(index) {
+            if (index < 0 || index >= TRACKS.length) return;
+            currentIndex = index;
+            const track = TRACKS[index];
+
+            // Update header title to current track name
+            if (displayTrackTitle) {
+                displayTrackTitle.textContent = track.name;
+            }
+
+            audio.src = track.url;
+            audio.load();
+
+            simCurrent = 0;
+
+            document.querySelectorAll('.track-item').forEach((el, i) =>
+                el.classList.toggle('active', i === index)
+            );
+
+            const activeEl = document.getElementById(`track-item-${index}`);
+            if (activeEl) activeEl.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+
+            progressFill.style.width = '0%';
+            timeCurrent.textContent = '00:00';
+            timeTotal.textContent = track.durationStr !== '00:00' ? track.durationStr : fmt(audio.duration || simDuration);
+        }
+
+        // ─── Playback ─────────────────────────────────────────────────────
+        function play() {
+            isPlaying = true;
+            setPlayUI(true);
+
+            audio.play().then(() => {
+                stopSimulatedTimer();
+            }).catch(() => {
+                startSimulatedTimer();
+            });
+        }
+
+        function pause() {
+            isPlaying = false;
+            setPlayUI(false);
+            audio.pause();
+            stopSimulatedTimer();
+        }
+
+        function togglePlay() {
+            if (isPlaying) {
+                pause();
+            } else {
+                play();
+            }
+        }
+
+        function setPlayUI(playing) {
+            const wrap = document.getElementById('play-icon-wrap');
+            if (!wrap) return;
+            if (playing) {
+                wrap.innerHTML = `<div class="icon-pause" id="icon-play">
+                    <div class="pause-bar"></div>
+                    <div class="pause-bar"></div>
+                </div>`;
+                btnPlay.classList.add('playing');
+            } else {
+                wrap.innerHTML = `<div class="icon-play" id="icon-play"></div>`;
+                btnPlay.classList.remove('playing');
+            }
+        }
+
+        // ─── Fallback Timer ───────────────────────────────────────────────
+        function startSimulatedTimer() {
+            stopSimulatedTimer();
+            timeTotal.textContent = fmt(simDuration);
+            simTimer = setInterval(() => {
+                if (!isPlaying) return;
+                simCurrent += 1;
+                if (simCurrent >= simDuration) {
+                    simCurrent = 0;
+                    loadTrack((currentIndex + 1) % TRACKS.length);
+                    play();
+                    return;
+                }
+                const pct = (simCurrent / simDuration) * 100;
+                progressFill.style.width = `${pct}%`;
+                timeCurrent.textContent = fmt(simCurrent);
+                const activeTime = document.getElementById(`track-time-${currentIndex}`);
+                if (activeTime) activeTime.textContent = fmt(simCurrent);
+            }, 1000);
+        }
+
+        function stopSimulatedTimer() {
+            if (simTimer) {
+                clearInterval(simTimer);
+                simTimer = null;
+            }
+        }
+
+        // ─── Button Listeners ─────────────────────────────────────────────
+        btnPlay.addEventListener('click', togglePlay);
+
+        btnPrev.addEventListener('click', () => {
+            const prevIndex = (currentIndex - 1 + TRACKS.length) % TRACKS.length;
+            loadTrack(prevIndex);
+            play();
+        });
+
+        btnNext.addEventListener('click', () => {
+            const nextIndex = (currentIndex + 1) % TRACKS.length;
+            loadTrack(nextIndex);
+            play();
+        });
+
+        // ─── Download ─────────────────────────────────────────────────────
+        btnDownload.addEventListener('click', () => {
+            const track = TRACKS[currentIndex];
+            const a = document.createElement('a');
+            a.href = track.downloadUrl || track.url;
+            a.download = (track.name.replace(/^\d+\./, '').trim() || 'track') + '.wav';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        });
+
+        // ─── Audio Events ─────────────────────────────────────────────────
+        audio.addEventListener('timeupdate', () => {
+            if (!isFinite(audio.duration) || audio.duration === 0) return;
+            stopSimulatedTimer();
+            const pct = (audio.currentTime / audio.duration) * 100;
+            progressFill.style.width = `${pct}%`;
+            timeCurrent.textContent = fmt(audio.currentTime);
+            const activeTime = document.getElementById(`track-time-${currentIndex}`);
+            if (activeTime) activeTime.textContent = fmt(audio.currentTime);
+        });
+
+        audio.addEventListener('loadedmetadata', () => {
+            timeTotal.textContent = fmt(audio.duration);
+        });
+
+        audio.addEventListener('ended', () => {
+            loadTrack((currentIndex + 1) % TRACKS.length);
+            play();
+        });
+
+        // ─── Seek ─────────────────────────────────────────────────────────
+        progressBg.addEventListener('click', (e) => {
+            const r = progressBg.getBoundingClientRect();
+            const pct = (e.clientX - r.left) / r.width;
+            if (audio.duration && isFinite(audio.duration)) {
+                audio.currentTime = pct * audio.duration;
+            } else {
+                simCurrent = pct * simDuration;
+                progressFill.style.width = `${pct * 100}%`;
+                timeCurrent.textContent = fmt(simCurrent);
+            }
+        });
+
+        // ─── Keyboard ─────────────────────────────────────────────────────
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT') return;
+            if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+            else if (e.code === 'ArrowRight') btnNext.click();
+            else if (e.code === 'ArrowLeft') btnPrev.click();
+        });
+
+        // ─── Init ─────────────────────────────────────────────────────────
+        (async function init() {
+            const dbTracks = await fetchTrackLibraryFromDatabase();
+            if (dbTracks && dbTracks.length > 0) {
+                TRACKS = dbTracks;
+            }
+            buildTrackList();
+            loadTrack(0);
+            probeAudioDurations();
+        })();
+    </script>
+
+    <!-- Synthwave Visualizer (no Web Audio API — safe for file:// playback) -->
+    <script>
+    (function() {
+        const canvas = document.getElementById('synthwave-canvas');
+        const ctx = canvas.getContext('2d');
+        const audioEl = document.getElementById('audio-engine');
+
+        // Resize canvas to fill viewport
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Smooth energy value that interpolates toward target
+        let smoothEnergy = 0;
+
+        // Wave configuration — each wave has its own personality
+        const waves = [
+            { color: [203, 90, 114],  baseAmp: 30,  freq: 0.003,  speed: 0.008,  yPos: 0.75, phase: 0     },  // deep pink
+            { color: [0, 220, 255],   baseAmp: 22,  freq: 0.005,  speed: 0.012,  yPos: 0.68, phase: 1.2   },  // cyan
+            { color: [180, 50, 180],  baseAmp: 18,  freq: 0.007,  speed: 0.015,  yPos: 0.80, phase: 2.5   },  // magenta
+            { color: [255, 100, 60],  baseAmp: 14,  freq: 0.004,  speed: 0.010,  yPos: 0.72, phase: 3.8   },  // warm orange
+            { color: [120, 60, 180],  baseAmp: 25,  freq: 0.002,  speed: 0.006,  yPos: 0.82, phase: 5.0   },  // purple
+            { color: [255, 50, 120],  baseAmp: 16,  freq: 0.009,  speed: 0.018,  yPos: 0.65, phase: 0.7   },  // hot pink
+        ];
+
+        let time = 0;
+
+        // 4x4 Bayer ordered dithering matrix (normalized 0..1)
+        const BAYER = [
+            [ 0/16,  8/16,  2/16, 10/16],
+            [12/16,  4/16, 14/16,  6/16],
+            [ 3/16, 11/16,  1/16,  9/16],
+            [15/16,  7/16, 13/16,  5/16]
+        ];
+
+        const GRID = 6;          // pixel size of each dither cell
+        const SPREAD = 120;      // how far below the wave line the dither field extends
+
+        // Get wave Y at a given x position
+        function getWaveY(x, wave, totalAmp, speedMult, w, baseY) {
+            const normalX = x / w;
+            const y1 = Math.sin((x * wave.freq) + (time * wave.speed * speedMult) + wave.phase) * totalAmp;
+            const y2 = Math.sin((x * wave.freq * 2.3) + (time * wave.speed * 0.7 * speedMult) + wave.phase * 1.5) * (totalAmp * 0.35);
+            const y3 = Math.sin((x * wave.freq * 0.5) + (time * wave.speed * 1.3 * speedMult) + wave.phase * 0.8) * (totalAmp * 0.5);
+            const edgeFade = Math.sin(normalX * Math.PI);
+            return baseY + (y1 + y2 + y3) * edgeFade;
+        }
+
+        function drawWave(wave, energy) {
+            const w = canvas.width;
+            const h = canvas.height;
+            const baseY = h * wave.yPos;
+            const [r, g, b] = wave.color;
+
+            // React to music state
+            const reactAmp = wave.baseAmp + energy * 60;
+            const baseOpacity = 0.05 + energy * 0.18;
+            const speedMult = 1 + energy * 2;
+
+            // Pseudo-beat pulse
+            const beatPulse = energy * (0.5 + 0.5 * Math.sin(time * 0.05 * (1 + wave.phase * 0.1)));
+            const totalAmp = reactAmp + beatPulse * 20;
+
+            // ── Dithered fill beneath the wave ──────────────────────────
+            const cols = Math.ceil(w / GRID);
+            const yMin = baseY - totalAmp - 20;  // a bit above the wave crest
+            const yMax = baseY + totalAmp + SPREAD;
+            const rowStart = Math.max(0, Math.floor(yMin / GRID));
+            const rowEnd   = Math.min(Math.ceil(h / GRID), Math.ceil(yMax / GRID));
+
+            for (let col = 0; col < cols; col++) {
+                const cx = col * GRID;
+                const waveY = getWaveY(cx, wave, totalAmp, speedMult, w, baseY);
+
+                for (let row = rowStart; row < rowEnd; row++) {
+                    const cy = row * GRID;
+
+                    // Only draw below the wave line
+                    const dist = cy - waveY;
+                    if (dist < -2) continue;
+
+                    // Intensity falls off with distance from wave line
+                    const falloff = 1 - Math.min(dist / SPREAD, 1);
+                    if (falloff <= 0) continue;
+
+                    // Bayer threshold check — creates the dithered pattern
+                    const threshold = BAYER[row % 4][col % 4];
+                    if (falloff < threshold) continue;
+
+                    // Opacity: strong near the line, fades with distance
+                    const alpha = baseOpacity * falloff * 0.7;
+                    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+                    ctx.fillRect(cx, cy, GRID - 1, GRID - 1);  // -1 gap for grid look
+                }
+            }
+
+            // ── Stepped geometric wave line ─────────────────────────────
+            // Quantize the wave to the grid for a geometric/pixelated stroke
+            ctx.beginPath();
+            let prevQY = Math.round(getWaveY(0, wave, totalAmp, speedMult, w, baseY) / GRID) * GRID;
+            ctx.moveTo(0, prevQY);
+
+            for (let col = 1; col <= cols; col++) {
+                const cx = col * GRID;
+                const rawY = getWaveY(cx, wave, totalAmp, speedMult, w, baseY);
+                const qy = Math.round(rawY / GRID) * GRID;
+
+                // Draw stepped: horizontal then vertical (staircase)
+                ctx.lineTo(cx, prevQY);
+                ctx.lineTo(cx, qy);
+                prevQY = qy;
+            }
+
+            ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${baseOpacity * 2.5})`;
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            time += 1;
+
+            // Target energy: 1 when playing, 0 when paused
+            // Uses the global isPlaying variable from the player script
+            const targetEnergy = (typeof isPlaying !== 'undefined' && isPlaying) ? 1 : 0;
+
+            // Smooth interpolation — ramps up quickly, fades out gently
+            const lerpSpeed = targetEnergy > smoothEnergy ? 0.06 : 0.03;
+            smoothEnergy += (targetEnergy - smoothEnergy) * lerpSpeed;
+
+            waves.forEach(wave => {
+                drawWave(wave, smoothEnergy);
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    })();
+    </script>
+
+</body>
+
+</html>

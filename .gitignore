@@ -1,0 +1,12 @@
+# Windows thumbnail database files
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+
+# macOS folder metadata
+.DS_Store
+
+# IDE and edit backups
+*.tmp
+*.bak
