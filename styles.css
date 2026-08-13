@@ -519,3 +519,58 @@ body {
 }
 
 audio { display: none; }
+
+/* ─── Mobile Responsiveness ─────────────────────────────────────────────── */
+@media (max-width: 850px) {
+    body {
+        padding: 20px 16px 40px;
+    }
+
+    .brand-header, .app-label {
+        text-align: center;
+        font-size: 28px;
+        margin-bottom: 20px;
+    }
+
+    .player-page-container, .app-wrapper {
+        flex-direction: column;
+        align-items: center;
+        gap: 32px;
+    }
+
+    .col-section, .left-col, .right-col {
+        width: 100%;
+        max-width: 380px;
+    }
+
+    .section-title, .col-header {
+        font-size: 20px;
+        margin-bottom: 16px;
+    }
+
+    .album-art-card, .album-art-wrap {
+        width: min(320px, 82vw);
+        height: min(320px, 82vw);
+        max-width: 320px;
+        max-height: 320px;
+        margin-bottom: 20px;
+    }
+
+    .controls-capsule, #main-capsule {
+        margin-bottom: 16px;
+    }
+
+    .tracks-card {
+        width: 100%;
+        max-width: 380px;
+        height: 380px;
+        padding: 14px 10px 14px 14px;
+    }
+
+    .progress-wrap {
+        width: 100%;
+        max-width: 380px;
+        margin-top: 16px;
+    }
+}
+
