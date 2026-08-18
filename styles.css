@@ -344,6 +344,76 @@ body {
     transform: scale(0.94);
 }
 
+/* ─── Loop / Shuffle Button ──────────────────────────────────────────────── */
+.btn-loop {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s, filter 0.25s, box-shadow 0.25s;
+    animation: floatGentleC 5.5s ease-in-out infinite;
+    animation-delay: 1.8s;
+    filter: grayscale(0.3) brightness(0.9);
+    flex-shrink: 0;
+}
+
+.btn-loop img {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    display: block;
+    pointer-events: none;
+    transition: transform 0.35s ease;
+}
+
+.btn-loop:hover {
+    transform: scale(1.08);
+    filter: brightness(1.1) drop-shadow(0 0 8px rgba(203, 90, 114, 0.5));
+}
+
+.btn-loop:active {
+    transform: scale(0.92);
+}
+
+/* Loop active state — rose glow */
+.btn-loop.mode-loop {
+    filter: brightness(1.15) drop-shadow(0 0 10px rgba(203, 90, 114, 0.85));
+    box-shadow: 0 0 18px rgba(203, 90, 114, 0.5);
+    border-radius: 50%;
+}
+
+.btn-loop.mode-loop img {
+    animation: loopPulse 1.8s ease-in-out infinite;
+}
+
+/* Shuffle active state — cyan glow, spinning icon */
+.btn-loop.mode-shuffle {
+    filter: brightness(1.2) drop-shadow(0 0 12px rgba(0, 220, 255, 0.9));
+    box-shadow: 0 0 20px rgba(0, 220, 255, 0.45);
+    border-radius: 50%;
+}
+
+.btn-loop.mode-shuffle img {
+    animation: shuffleSpin 1.2s linear infinite;
+}
+
+@keyframes loopPulse {
+    0%   { transform: scale(1);    filter: brightness(1); }
+    50%  { transform: scale(1.08); filter: brightness(1.25) drop-shadow(0 0 6px rgba(203,90,114,0.8)); }
+    100% { transform: scale(1);    filter: brightness(1); }
+}
+
+@keyframes shuffleSpin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
 /* ─── Floating Track List Window Card (Clipped Scrollbar) ───────────────── */
 .tracks-card {
     position: relative;

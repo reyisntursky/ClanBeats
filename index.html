@@ -61,8 +61,13 @@
                 </button>
             </div>
 
-            <!-- Floating Download Button -->
-            <button class="btn-download" id="btn-download" aria-label="Download current track">Download</button>
+            <!-- Floating Action Buttons -->
+            <div class="action-buttons-wrap">
+                <button class="btn-download" id="btn-download" aria-label="Download current track">Download</button>
+                <button class="btn-loop" id="btn-loop" aria-label="Toggle loop or shuffle" title="Loop / Shuffle">
+                    <img src="Repeater.png" alt="Loop" id="loop-icon">
+                </button>
+            </div>
         </section>
 
         <!-- Right Column Section -->
@@ -204,6 +209,10 @@
         let simCurrent = 0;
         const simDuration = 180; // Default fallback duration before metadata loads
 
+        // Playback mode: 'normal' | 'loop' | 'shuffle'
+        let playbackMode = 'normal';
+        let loopLastClickTime = 0; // For double-click detection
+
         // ─── DOM Refs ─────────────────────────────────────────────────────
         const audio = document.getElementById('audio-engine');
         const trackList = document.getElementById('track-list');
@@ -211,6 +220,7 @@
         const btnPrev = document.getElementById('btn-prev');
         const btnNext = document.getElementById('btn-next');
         const btnDownload = document.getElementById('btn-download');
+        const btnLoop = document.getElementById('btn-loop');
         const timeCurrent = document.getElementById('time-current');
         const timeTotal = document.getElementById('time-total');
         const progressFill = document.getElementById('progress-fill');
@@ -328,6 +338,33 @@
             }
         }
 
+        // ─── Playback Mode Logic ──────────────────────────────────────────
+        function getNextTrackIndex() {
+            if (playbackMode === 'loop') return currentIndex;
+            if (playbackMode === 'shuffle') {
+                let next;
+                do { next = Math.floor(Math.random() * TRACKS.length); } while (TRACKS.length > 1 && next === currentIndex);
+                return next;
+            }
+            return (currentIndex + 1) % TRACKS.length;
+        }
+
+        function setPlaybackMode(mode) {
+            playbackMode = mode;
+            const btn = document.getElementById('btn-loop');
+            const icon = document.getElementById('loop-icon');
+            btn.classList.remove('mode-loop', 'mode-shuffle');
+            if (mode === 'loop') {
+                btn.classList.add('mode-loop');
+                btn.title = 'Looping — press to shuffle';
+            } else if (mode === 'shuffle') {
+                btn.classList.add('mode-shuffle');
+                btn.title = 'Shuffling — press to stop';
+            } else {
+                btn.title = 'Loop / Shuffle';
+            }
+        }
+
         // ─── Fallback Timer ───────────────────────────────────────────────
         function startSimulatedTimer() {
             stopSimulatedTimer();
@@ -337,7 +374,7 @@
                 simCurrent += 1;
                 if (simCurrent >= simDuration) {
                     simCurrent = 0;
-                    loadTrack((currentIndex + 1) % TRACKS.length);
+                    loadTrack(getNextTrackIndex());
                     play();
                     return;
                 }
@@ -382,6 +419,27 @@
             document.body.removeChild(a);
         });
 
+        // ─── Loop / Shuffle Button ────────────────────────────────────────
+        btnLoop.addEventListener('click', () => {
+            const now = Date.now();
+            const timeSinceLast = now - loopLastClickTime;
+            loopLastClickTime = now;
+
+            if (timeSinceLast < 350) {
+                // Double-click: activate shuffle regardless of current mode
+                setPlaybackMode('shuffle');
+            } else {
+                // Single-click: cycle normal → loop → normal
+                if (playbackMode === 'normal') {
+                    setPlaybackMode('loop');
+                } else if (playbackMode === 'loop') {
+                    setPlaybackMode('normal');
+                } else if (playbackMode === 'shuffle') {
+                    setPlaybackMode('normal');
+                }
+            }
+        });
+
         // ─── Audio Events ─────────────────────────────────────────────────
         audio.addEventListener('timeupdate', () => {
             if (!isFinite(audio.duration) || audio.duration === 0) return;
@@ -398,7 +456,7 @@
         });
 
         audio.addEventListener('ended', () => {
-            loadTrack((currentIndex + 1) % TRACKS.length);
+            loadTrack(getNextTrackIndex());
             play();
         });
 
