@@ -346,39 +346,56 @@ body {
 
 /* ─── Loop / Shuffle Button ──────────────────────────────────────────────── */
 .btn-loop {
-    background: none;
+    background: radial-gradient(
+        circle at 34% 28%,
+        #d8d8d8 0%,
+        #b4b4b4 20%,
+        #888888 45%,
+        #585858 72%,
+        #363636 100%
+    );
     border: none;
     padding: 0;
     cursor: pointer;
     width: 46px;
     height: 46px;
     border-radius: 50%;
-    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
     transition: transform 0.15s, filter 0.25s, box-shadow 0.25s;
     animation: floatGentleC 5.5s ease-in-out infinite;
     animation-delay: 1.8s;
-    filter: grayscale(0.3) brightness(0.9);
-    flex-shrink: 0;
+    box-shadow:
+        0 4px 14px rgba(0,0,0,0.6),
+        0 0 0 1.5px #111,
+        0 0 0 3px #666,
+        0 0 0 4px #1a1a1a,
+        inset 0 1px 2px rgba(255,255,255,0.35),
+        inset 0 -1px 3px rgba(0,0,0,0.55);
 }
 
-.btn-loop img {
-    width: 46px;
-    height: 46px;
-    max-width: 100%;
-    max-height: 100%;
-    border-radius: 50%;
-    object-fit: cover;
-    display: block;
+/* SVG icon shared styles */
+.loop-icon-svg,
+.shuffle-icon-svg {
+    width: 20px;
+    height: 20px;
+    stroke: #cb5a72;
+    flex-shrink: 0;
     pointer-events: none;
-    transition: transform 0.35s ease;
+    filter: drop-shadow(0 0 3px rgba(203, 90, 114, 0.55));
+    transition: opacity 0.2s;
+}
+
+/* Shuffle icon hidden by default */
+.shuffle-icon-svg {
+    display: none;
 }
 
 .btn-loop:hover {
     transform: scale(1.08);
-    filter: brightness(1.1) drop-shadow(0 0 8px rgba(203, 90, 114, 0.5));
+    filter: drop-shadow(0 0 8px rgba(203, 90, 114, 0.55));
 }
 
 .btn-loop:active {
@@ -387,30 +404,50 @@ body {
 
 /* Loop active state — rose glow */
 .btn-loop.mode-loop {
-    filter: brightness(1.15) drop-shadow(0 0 10px rgba(203, 90, 114, 0.85));
-    box-shadow: 0 0 18px rgba(203, 90, 114, 0.5);
-    border-radius: 50%;
+    filter: drop-shadow(0 0 10px rgba(203, 90, 114, 0.9));
+    box-shadow:
+        0 0 18px rgba(203, 90, 114, 0.55),
+        0 4px 14px rgba(0,0,0,0.6),
+        0 0 0 1.5px #111,
+        0 0 0 3px #cb5a72,
+        0 0 0 4px #1a1a1a,
+        inset 0 1px 2px rgba(255,255,255,0.35),
+        inset 0 -1px 3px rgba(0,0,0,0.55);
 }
 
-.btn-loop.mode-loop img {
+.btn-loop.mode-loop .loop-icon-svg {
     animation: loopPulse 1.8s ease-in-out infinite;
 }
 
 /* Shuffle active state — cyan glow, spinning icon */
 .btn-loop.mode-shuffle {
-    filter: brightness(1.2) drop-shadow(0 0 12px rgba(0, 220, 255, 0.9));
-    box-shadow: 0 0 20px rgba(0, 220, 255, 0.45);
-    border-radius: 50%;
+    filter: drop-shadow(0 0 12px rgba(0, 220, 255, 0.95));
+    box-shadow:
+        0 0 20px rgba(0, 220, 255, 0.5),
+        0 4px 14px rgba(0,0,0,0.6),
+        0 0 0 1.5px #111,
+        0 0 0 3px #00dcff,
+        0 0 0 4px #1a1a1a,
+        inset 0 1px 2px rgba(255,255,255,0.35),
+        inset 0 -1px 3px rgba(0,0,0,0.55);
 }
 
-.btn-loop.mode-shuffle img {
+/* Show shuffle icon, hide loop icon */
+.btn-loop.mode-shuffle .loop-icon-svg {
+    display: none;
+}
+
+.btn-loop.mode-shuffle .shuffle-icon-svg {
+    display: block;
+    stroke: #00dcff;
+    filter: drop-shadow(0 0 4px rgba(0, 220, 255, 0.8));
     animation: shuffleSpin 1.2s linear infinite;
 }
 
 @keyframes loopPulse {
-    0%   { transform: scale(1);    filter: brightness(1); }
-    50%  { transform: scale(1.08); filter: brightness(1.25) drop-shadow(0 0 6px rgba(203,90,114,0.8)); }
-    100% { transform: scale(1);    filter: brightness(1); }
+    0%   { transform: scale(1);    opacity: 1; }
+    50%  { transform: scale(1.18); opacity: 0.75; }
+    100% { transform: scale(1);    opacity: 1; }
 }
 
 @keyframes shuffleSpin {

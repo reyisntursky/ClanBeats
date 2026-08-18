@@ -65,7 +65,21 @@
             <div class="action-buttons-wrap">
                 <button class="btn-download" id="btn-download" aria-label="Download current track">Download</button>
                 <button class="btn-loop" id="btn-loop" aria-label="Toggle loop or shuffle" title="Loop / Shuffle">
-                    <img src="Repeater.png" alt="Loop" id="loop-icon">
+                    <!-- Loop / Repeat icon -->
+                    <svg class="loop-icon-svg" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M17 2l4 4-4 4" stroke-width="2.5"/>
+                        <path d="M3 11V9a4 4 0 014-4h14" stroke-width="2.5"/>
+                        <path d="M7 22l-4-4 4-4" stroke-width="2.5"/>
+                        <path d="M21 13v2a4 4 0 01-4 4H3" stroke-width="2.5"/>
+                    </svg>
+                    <!-- Shuffle icon (hidden until shuffle mode) -->
+                    <svg class="shuffle-icon-svg" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M16 3h5v5" stroke-width="2.5"/>
+                        <path d="M4 20L21 3" stroke-width="2.5"/>
+                        <path d="M21 16v5h-5" stroke-width="2.5"/>
+                        <path d="M15 15l6 6" stroke-width="2.5"/>
+                        <path d="M4 4l5 5" stroke-width="2.5"/>
+                    </svg>
                 </button>
             </div>
         </section>
