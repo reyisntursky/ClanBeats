@@ -359,11 +359,16 @@ body {
     cursor: pointer;
     width: 46px;
     height: 46px;
+    min-width: 46px;
+    min-height: 46px;
+    max-width: 46px;
+    max-height: 46px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    overflow: hidden;
     transition: transform 0.15s, filter 0.25s, box-shadow 0.25s;
     animation: floatGentleC 5.5s ease-in-out infinite;
     animation-delay: 1.8s;
@@ -381,11 +386,16 @@ body {
 .shuffle-icon-svg {
     width: 20px;
     height: 20px;
+    min-width: 20px;
+    min-height: 20px;
+    max-width: 20px;
+    max-height: 20px;
     stroke: #cb5a72;
     flex-shrink: 0;
     pointer-events: none;
     filter: drop-shadow(0 0 3px rgba(203, 90, 114, 0.55));
     transition: opacity 0.2s;
+    display: block;
 }
 
 /* Shuffle icon hidden by default */
